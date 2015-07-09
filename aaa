@@ -1,0 +1,1619 @@
+#last edited 20-Dec-201203
+
+
+
+class GitHub(NSUITest):
+	'''
+	Base class for all GitHub actions
+	'''
+	
+	def __init__(self):
+		'''
+		GitHub initiator.
+		'''
+		super(GitHub,self).__init__()
+		self.browser = get_browser()
+		
+		
+####### Private Actions Starts From Here On ########	
+
+
+	def _isRepoPresent(self):
+		'''
+		checks if repository is present
+		
+		'Home' -> check for element
+		'''
+		logger.debug("GitHub: _isRepoPresent")
+		logger.debug("GitHub: Waiting for the first repository name.")
+		repoNameText = wait_for(get_element_by_xpath , "//ul[@id='repo_listing']/li/a/span[2]/span")
+		if repoNameText:
+			logger.debug("GitHub: _isRepoPresent: repository Found.")	
+			return True
+		else:
+			logger.debug("GitHub: _isRepoPresent: repository not Found.")	
+			return False
+		
+		
+	def _createRepo(self):
+		'''
+		creates a repository...
+		
+		'Home' -> 'New repository' button(click) -> write repo name
+		-> 'Create repository' button(click)
+		'''
+		logger.debug("GitHub: _createRepo")	
+		logger.debug("GitHub: Click on new repository button at the bottom right of page.")
+		newRepo = wait_for(get_element_by_xpath , "//div[@id='your_repos']/div[1]/a")
+		click_element(newRepo)
+		logger.debug("GitHub: Write repository name into the textbox.")
+		repoNameTextBox = wait_for(assert_element , id = 'repository_name' , tag = 'input')
+		write_textfield(repoNameTextBox , self.repoName)
+		sleep(3)
+		logger.debug("GitHub: Click button create repository.")
+		createRepoButton = wait_for(get_element_by_xpath , "//form[@id='new_repository']/div[3]/button")
+		click_element(createRepoButton)
+		sleep(3)
+		click_element(createRepoButton)
+		sleep(3)
+		logger.debug("GitHub: go to user home page.")
+		homeIcon = wait_for(get_element_by_xpath , "html/body/div[1]/div[1]/div/a[1]/span")
+		click_element(homeIcon)
+		
+		
+	def _deleteRepo(self , repoNameArg):
+		'''
+		deletes a repository...
+		
+		'Home' -> 'new-repo' link(click) -> 'Settings' icon(click) ->
+		'Delete this repository' button(click) -> write repository name ->
+		'I understand the consequences' button(click)
+		'''
+		logger.debug("GitHub: _deleteRepo")	
+		logger.debug("GitHub: Click on the repository link in the repository tab.")
+		repoLink = wait_for(get_element_by_xpath , "//ul[@id='repo_listing']/li/a/span[2]/span")
+		click_element(repoLink)
+		logger.debug("GitHub: Click on the settings icon in the right menu list.")
+		settingsIcon = wait_for(get_elements , css_class = 'octicon octicon-tools' , tag = 'span')
+		click_element(settingsIcon[1])
+		sleep(3)
+		logger.debug("GitHub: send keys for page down.")
+		self.browser.switch_to_default_content()
+		ac = get_action_chain()
+		ac.send_keys(u'\ue00f').perform()
+		logger.debug("GitHub: click on delete this repository button.")
+		deleteRepoButton = wait_for(assert_element , text = 'Delete this repository' , tag = 'a')
+		click_element(deleteRepoButton)
+		logger.debug("GitHub: write repository name in the textbox.")
+		repoTextBox = wait_for(get_element_by_xpath , "//div[@id='facebox']/div/div/div[2]/p/input")
+		write_textfield(repoTextBox , repoNameArg)
+		logger.debug("GitHub: click on i understand button.")
+		deleteButton = wait_for(get_element_by_xpath , "//div[@id='facebox']/div/div/div[2]/form/button" )
+		click_element(deleteButton)
+		sleep(3)
+		
+		
+	def _renameRepo(self):
+		'''
+		renames a repository
+		
+		'Home' -> 'new-repo' link(click) -> 'settings' icon(click) ->
+		write new repo name -> 'Rename' button(click)
+		'''
+		logger.debug("GitHub: _renameRepo")	
+		logger.debug("GitHub: Click on the repository link in the repository tab.")
+		repoLink = wait_for(get_element_by_xpath , "//ul[@id='repo_listing']/li/a/span[2]/span")
+		click_element(repoLink)
+		logger.debug("GitHub: Click on the settings icon in the right menu list.")
+		settingsIcon = wait_for(get_elements , css_class = 'octicon octicon-tools' , tag = 'span')
+		click_element(settingsIcon[1])
+		sleep(3)	
+		logger.debug("GitHub: Write repo name in the text box.")
+		repoTextbox = wait_for(assert_element , id = 'rename_field' , tag = 'input')
+		write_textfield(repoTextbox , self.newRepoName)
+		sleep(3)
+		logger.debug("GitHub: Click on the rename button.")
+		renameButton = wait_for(assert_element , text = 'Rename' , tag = 'button')
+		click_element(renameButton)
+		logger.debug("GitHub: go to user home page.")
+		homeIcon = wait_for(get_element_by_xpath , "html/body/div[1]/div[1]/div/a[1]/span")
+		click_element(homeIcon)
+		sleep(3)
+		
+		
+	def _isOrganizationPresent(self):
+		'''
+		checks if organization is present
+		
+		'Home' -> 'jumbo-tester' drop-down(click) -> search for the element
+		'''
+		logger.debug("GitHub: _isOrganizationPresent")	
+		logger.debug("GitHub: Click on user dropdown button at the top left.")
+		userDropDown = wait_for(get_element_by_xpath , "//div[@id='site-container']/div[1]/div/div/span")
+		click_element(userDropDown)
+		sleep(3)
+		logger.debug("GitHub: Waiting for the first organization name.")
+		orgNameText = wait_for(get_element_by_xpath , "//div[@id='site-container']/div[1]/div/div/div/div/div[2]/a/span[2]")
+		sleep(3)
+		logger.debug("GitHub: Closing the dropdown.")
+		closeDropDown = wait_for(get_element_by_xpath , "//div[@class='select-menu-header']/span[2]")
+		click_element(closeDropDown)
+		if orgNameText:
+			logger.debug("GitHub: _isOrganizationPresent: organization Found.")	
+			return True
+		else:
+			logger.debug("GitHub: _isOrganizationPresent: organization not Found.")	
+			return False
+		
+		
+	def _createOrganization(self):
+		'''
+		creates an organization..
+		
+		'Home' -> 'jumbo-tester' drop-down(click) -> 'Create Organization' menu item(click)
+		-> write organization name -> write billing email -> 'Create organization' button(click)
+		-> 'Finish' button(click)
+		'''
+		logger.debug("GitHub: _createorganization")	
+		logger.debug("GitHub: Click on user dropdown button at the top left.")
+		userDropDown = wait_for(get_element_by_xpath , "//div[@id='site-container']/div[1]/div/div/span")
+		click_element(userDropDown)
+		sleep(3)
+		logger.debug("GitHub: Click on create organization menu item.")
+		createMenuItem = wait_for(get_element_by_xpath , "//div[@id='site-container']/div[1]/div/div/div/div/div[3]/a")
+		click_element(createMenuItem)
+		logger.debug("GitHub: Write organization name into the textbox.")
+		orgTextBox = wait_for(assert_element , id = 'organization_login' , tag = 'input')
+		write_textfield(orgTextBox , self.orgName)
+		logger.debug("GitHub: Write billing email into the textbox.")
+		billingTextBox = wait_for(assert_element , id = 'organization_billing_email' , tag = 'input')
+		write_textfield(billingTextBox , self.email)
+		logger.debug("GitHub: click on create organization button.")
+		createButton = wait_for(assert_element , text = 'Create Organization' , tag = 'button')
+		click_element(createButton)
+		logger.debug("GitHub: click on finish button.")
+		finishButton = wait_for(assert_element , text = 'Finish' , tag = 'a')
+		click_element(finishButton)
+		sleep(3)
+		logger.debug("GitHub: Click on organization dropdown button at the top left.")
+		orgDropDown = wait_for(get_element_by_xpath , "//div[@id='site-container']/div[1]/div/div/span")
+		click_element(orgDropDown)
+		logger.debug("GitHub: Click on user name menu item.")
+		usernameMenuItem = wait_for(assert_element , text = 'jumbo-tester' , tag = 'span')
+		click_element(usernameMenuItem)
+		
+		
+	def _deleteOrganization(self , orgNameArg):
+		'''
+		deletes an organization...
+		
+		'Home' -> 'jumbo-tester' drop-down(click) -> 'new-organization' menu-item(click)
+		-> 'Edit new organization's settings' link(click) -> 'Delete this organization' button(click)
+		-> write organization name -> 'Cancel plan and delete' button(click)
+		'''
+		logger.debug("GitHub: _deleteOrganization")	
+		logger.debug("GitHub: Click on user dropdown button at the top left.")
+		userDropDown = wait_for(get_element_by_xpath , "//div[@id='site-container']/div[1]/div/div/span")
+		click_element(userDropDown)	
+		sleep(3)
+		logger.debug("GitHub: Click on the organization name.")
+		orgNameMenuItem = wait_for(get_element_by_xpath , "//div[@id='site-container']/div[1]/div/div/div/div/div[2]/a/span[2]")
+		click_element(orgNameMenuItem)
+		logger.debug("GitHub: Click on edit organizations settings.")
+		# orgSetting = wait_for(get_element_by_xpath , "//div[@id='dashboard']/div[1]/div[3]/div/div[2]/div/ul/li[4]/a")
+		orgSetting = wait_for(get_element_by_xpath , "//a[contains(.,'Edit new-organization')]")
+		click_element(orgSetting)
+		logger.debug("GitHub: Waiting for sample_organization")
+		orgExist = wait_for(get_element, tag = 'a', text = self.newOrgName)
+		logger.debug("GitHub: send keys for page down.")
+		self.browser.switch_to_default_content()
+		ac = get_action_chain()
+		ac.send_keys(u'\ue00f').perform()
+		sleep(3)
+		logger.debug("GitHub: Click on delete this organization button.")
+		deleteOrgButton = wait_for(assert_element , text = 'Delete this organization' , tag = 'a')
+		click_element(deleteOrgButton)
+		if orgExist:
+			logger.debug("GitHub: write organization name in the textbox.")
+			orgTextBox = wait_for(get_element_by_xpath , "//div[@id='facebox']/div/div/div/p/input")
+			write_textfield(orgTextBox , self.newOrgName)
+			sleep(4)
+		else :
+			logger.debug("GitHub: write organization name in the textbox.")
+			orgTextBox = wait_for(get_element_by_xpath , "//div[@id='facebox']/div/div/div/p/input")
+			write_textfield(orgTextBox , self.orgName)
+			sleep(4)
+		logger.debug("GitHub: click on cancel plan and delete button.")
+		deleteButton = wait_for(get_element_by_xpath , "//div[@id='facebox']/div/div/div/form/button" )
+		click_element(deleteButton)
+		sleep(5)
+		refresh()
+		
+		
+	def _createIssue(self):
+		'''
+		creates an issue
+		
+		'Home' -> 'new-repo' link(click) -> 'issues' icon(click) -> 'New Issue' button(click)
+		-> write title -> write comment -> 'Submit new issue' button(click)
+		'''
+		logger.debug("GitHub: _createIssue")	
+		logger.debug("GitHub: Click on the new issue button.")
+		newIssueButton = wait_for(assert_element , text = 'New Issue' , tag = 'a')
+		click_element(newIssueButton)
+		logger.debug("GitHub: Write title in the textbox.")
+		titleTextbox = wait_for(assert_element , id = 'issue_title' , tag = 'input')
+		write_textfield(titleTextbox , self.issueTitle)
+		logger.debug("GitHub: Write comment in the textarera.")
+		commentTextArea = wait_for(assert_element , id = 'issue_body' , tag = 'textarea')
+		write_textfield(commentTextArea , self.issueComment)
+		logger.debug("GitHub: Click on submit new issue button.")
+		submitButton = wait_for(get_element_by_xpath , "//form[@id='new_issue']/div[2]/div[1]/div/div[2]/button")
+		click_element(submitButton)
+		sleep(3)
+		logger.debug("GitHub: Click on the issues icon in the right menu list.")
+		issueIcon = wait_for(get_elements , css_class = 'octicon octicon-issue-opened' , tag = 'span')
+		click_element(issueIcon[1])
+		
+		
+	def _isIssuePresent(self):
+		'''
+		checks if issue is present...
+		
+		'Home' -> 'new-repo' link(click) -> 'issues' icon(click) -> search for the element
+		'''
+		logger.debug("GitHub: _isIssuePresent")
+		logger.debug("GitHub: Click on the repository link in the repository tab.")
+		repoLink = wait_for(get_element_by_xpath , "//ul[@id='repo_listing']/li/a/span[2]/span")
+		click_element(repoLink)
+		logger.debug("GitHub: Click on the issues icon in the right menu list.")
+		issueIcon = wait_for(get_elements , css_class = 'octicon octicon-issue-opened' , tag = 'span')
+		click_element(issueIcon[1])
+		sleep(3)
+		logger.debug("GitHub: close the milestone filters.")
+		milestoneFilter = wait_for(get_element , id = 'clear-active-filters' , tag = 'a')
+		if milestoneFilter:
+			logger.debug("GitHub: click on close link.")
+			closeIcon = wait_for(get_element_by_xpath , "//a[@id='clear-active-filters']/span")
+			click_element(closeIcon)
+		logger.debug("GitHub: Waiting for first issue name.")	
+		issueNameText = wait_for(get_element_by_xpath , "//ul[@class='list-group issue-list-group']/li[2]/h4")
+		if issueNameText:
+			logger.debug("GitHub: _isIssuePresent: issue Found.")	
+			return True
+		else:
+			logger.debug("GitHub: _isIssuePresent: issue not Found.")	
+			return False
+			
+	
+	def _closeIssue(self):
+		'''
+		closes an issue...
+		
+		'Home' -> 'new-repo' link(click) -> 'issues' icon(click) ->
+		'new-issue' check-box(check) -> 'Close' button(click)
+		'''
+		logger.debug("GitHub: _closeIssue")
+		logger.debug("GitHub: Click on the check box preceding the issue name.")
+		issueCheckbox = wait_for(get_element_by_xpath , "//ul[@class='list-group issue-list-group']/li[2]/input")
+		click_element(issueCheckbox)
+		logger.debug("GitHub: Click on the close button.")
+		closeButton = wait_for(assert_element , text = 'Close' , tag = 'a')
+		click_element(closeButton)
+		sleep(3)
+		
+		
+	def _isLabelPresent(self):
+		'''
+		checks if label is present
+		
+		'Home' -> 'new-repo' link(click) -> 'issues' icon(click) -> search for the element
+		'''
+		logger.debug("GitHub: _isLabelPresent")	
+		logger.debug("GitHub: Waiting for first label name.")	
+		labelNameIcon = wait_for(get_element_by_xpath , "//div[@id='issues_list']/div[2]/div[2]/div[1]/ul/li[2]/h4/span[2]/span")
+		if labelNameIcon:
+			logger.debug("GitHub: _isLabelPresent: label Found.")	
+			return True
+		else:
+			logger.debug("GitHub: _isLabelPresent: label not Found.")	
+			return False
+			
+			
+	def _addLabel(self):
+		'''
+		adds a label
+		
+		'Home' -> 'new-repo' link(click) -> 'issues' icon(click) -> 'new-issue' check-box(check)
+		-> 'Label' drop-down(click) -> 'bug' drop-down item(click) -> 'Apply' button(click)
+		'''
+		logger.debug("GitHub: _addLabel")	
+		logger.debug("GitHub: Click on the check box preceding the issue name.")
+		issueCheckbox = wait_for(get_element_by_xpath , "//ul[@class='list-group issue-list-group']/li[2]/input")
+		click_element(issueCheckbox)
+		logger.debug("GitHub: Click on the label dropdown button.")
+		labelDropDown = wait_for(assert_element , text = 'Label' , tag = 'a')
+		click_element(labelDropDown)
+		logger.debug("GitHub: Click on the bug dropdown menu item.")
+		bugMenuItem = wait_for(get_element_by_xpath , "//div[@class='color-label-wrapper']/div[@data-name='bug']")
+		click_element(bugMenuItem)
+		logger.debug("GitHub: Click on the apply button.")
+		applyButton = wait_for(assert_element , text = 'Apply' , tag = 'a')
+		click_element(applyButton)
+		sleep(5)
+		
+	
+	def _removeLabel(self):
+		'''
+		removes a label
+		
+		'Home' -> 'new-repo' link(click) -> 'issues' icon(click) -> 'new-issue' check-box(check)
+		-> 'Label' drop-down(click) -> 'bug' drop-down item(click) -> 'Apply' button(click)
+		'''
+		logger.debug("GitHub: _removeLabel")	
+		logger.debug("GitHub: Click on the check box preceding the issue name.")
+		issueCheckbox = wait_for(get_element_by_xpath , "//ul[@class='list-group issue-list-group']/li[2]/input")
+		click_element(issueCheckbox)
+		logger.debug("GitHub: Click on the label dropdown button.")
+		labelDropDown = wait_for(assert_element , text = 'Label' , tag = 'a')
+		click_element(labelDropDown)
+		logger.debug("GitHub: Click on the bug dropdown menu item.")
+		bugMenuItem = wait_for(get_element_by_xpath , "//div[@class='color-label-wrapper']/div[@data-name='bug']")
+		click_element(bugMenuItem)
+		logger.debug("GitHub: Click on the apply button.")
+		removeButton = wait_for(assert_element , text = 'Remove' , tag = 'a')
+		click_element(removeButton)
+		sleep(5)
+		
+		
+	def _iscommentPresent(self):
+		'''
+		checks if comment is present...
+		
+		'Home' -> 'new-repo' link(click) -> 'issues' icon(click) -> 'new-issue' link(click)
+		-> search for the element
+		'''
+		logger.debug("GitHub: _iscommentPresent")	
+		logger.debug("GitHub: Waiting for first comment bar.")	
+		commentBar = wait_for(assert_elements_by_xpath , "//p[text()='%s']" %self.issueReComment)
+		if commentBar:
+			logger.debug("GitHub: _iscommentPresent: comment Found.")	
+			return True
+		else:
+			logger.debug("GitHub: _iscommentPresent: comment not Found.")	
+			return False
+		
+		
+	def _addComment(self):
+		'''
+		adds a comment...
+		
+		'Home' -> 'new-repo' link(click) -> 'issues' icon(click) -> 'new-issue' link(click)
+		-> write comment -> send keys for enter
+		'''
+		logger.debug("GitHub: _addcomment")	
+		logger.debug("GitHub: write comment in the text area.")
+		commentTextArea=wait_for(get_element_by_xpath,"//textarea[@placeholder='Leave a comment' and @name='comment[body]']")
+		write_textfield(commentTextArea , self.issueReComment)
+		logger.debug("GitHub: send keys for tab.")
+		commentTextArea.send_keys(u'\ue004')
+		sleep(3)
+		logger.debug("GitHub: send keys for enter.")
+		element = self.browser.switch_to_active_element()
+		element.send_keys(u'\ue007')
+		sleep(3)
+		
+	
+	def _deleteComment(self):
+		'''
+		deletes a comment...
+		
+		'Home' -> 'new-repo' link(click) -> 'issues' icon(click) -> 'new-issue' link(click)
+		'Delete' icon(click) -> accept the alert
+		'''
+		logger.debug("GitHub: _deletecomment")	
+		logger.debug("GitHub: click on the delete icon.")
+		deleteIcon = wait_for(get_element_by_xpath , "//a[@title='Delete comment']")
+		click_element(deleteIcon, wait = False)
+		sleep(3)
+		logger.debug("GitHub: accepting the alert.")
+		accept_alert()
+		sleep(5)
+		
+		
+	def _editComment(self):
+		'''
+		edits a comment...
+		
+		'Home' -> 'new-repo' link(click) -> 'issues' icon(click) -> 'new-issue' link(click)
+		'Edit' icon(click) -> write comment -> 'Update' button(click)
+		'''
+		logger.debug("GitHub: _editComment")	
+		logger.debug("GitHub: click on the edit icon.")
+		editIcon = wait_for(get_element_by_xpath , "//a[@title='Delete comment']/preceding-sibling::a")
+		click_element(editIcon)		
+		sleep(3)
+		logger.debug("GitHub: write comment in the text area.")
+		commentTextArea=wait_for(get_element_by_xpath , "//textarea[@name='issue_comment[body]']")
+		write_textfield(commentTextArea , self.editedComment)
+		sleep(3)
+		logger.debug("GitHub: click on update button.")
+		updateButton = wait_for(assert_element , text = 'Update Comment' , tag = 'button')
+		click_element(updateButton)
+		sleep(3)
+		
+		
+	def _renameIssue(self):
+		'''
+		renames an issue...
+		
+		'Home' -> 'new-repo' link(click) -> 'issues' icon(click) -> 'new-issue' link(click)
+		'Edit' button(click) -> write new issue name -> 'Update issue' button(click)
+		'''
+		logger.debug("GitHub: _renameIssue")	
+		logger.debug("GitHub: click on the edit button.")
+		editButton = wait_for(assert_element , text = 'Edit' , tag = 'button')
+		click_element(editButton)		
+		sleep(3)
+		logger.debug("GitHub: write new issue name in the text area.")
+		issueTextArea=wait_for(assert_element , id = 'issue_title' , tag = 'input')
+		write_textfield(issueTextArea , self.newIssueTitle)
+		sleep(3)
+		# logger.debug("GitHub: send keys for page down.")
+		# self.browser.switch_to_default_content()
+		# ac = get_action_chain()
+		# ac.send_keys(u'\ue00f').perform()
+		# sleep(3)
+		logger.debug("GitHub: click on the save button.")
+		saveButton = wait_for(assert_element , text = 'Save' , tag = 'button')
+		click_element(saveButton)
+		sleep(3)	
+		
+		
+	def _isLabelCreated(self):
+		'''
+		checks if label has been created
+		
+		'Home' -> 'new-repo' link(click) -> 'issues' icon(click)
+		-> search for the element
+		'''
+		logger.debug("GitHub: _isLabelCreated")
+		logger.debug("GitHub: Click on the repository link in the repository tab.")
+		repoLink = wait_for(get_element_by_xpath , "//ul[@id='repo_listing']/li/a/span[2]/span")
+		click_element(repoLink)
+		logger.debug("GitHub: Click on the issues icon in the right menu list.")
+		issueIcon = wait_for(get_elements , css_class = 'octicon octicon-issue-opened' , tag = 'span')
+		click_element(issueIcon[1])
+		sleep(3)
+		logger.debug("GitHub: Wait for the label name.")
+		labelText = wait_for(assert_element , text = 'new-label' , tag = 'span')
+		if labelText:
+			logger.debug("GitHub: _isLabelCreated: label Found.")	
+			return True
+		else:
+			logger.debug("GitHub: _isLabelCreated: label not Found.")	
+			return False
+		
+		
+	def _createLabel(self):
+		'''
+		creates a label...
+		
+		'Home' -> 'new-repo' link(click) -> 'issues' icon(click) -> 
+		write label name -> chose label color -> 'Create' button(click)
+		'''
+		logger.debug("GitHub: _createLabel")	
+		logger.debug("GitHub: Write label name into new label name textbox.")
+		labelNameTextbox = wait_for(get_element_by_xpath , "//form[@id='new_label_form']/input")
+		write_textfield(labelNameTextbox , self.labelName)
+		sleep(3)
+		logger.debug("GitHub: Chose the color of the label.")
+		labelColor = wait_for(get_element_by_xpath , "//form[@id='new_label_form']/ul[1]/li[4]/span")
+		click_element(labelColor)
+		sleep(3)
+		logger.debug("GitHub: Click on create button.")
+		createButton = wait_for(assert_element , text = 'Create' , tag = 'button')
+		click_element(createButton)
+		sleep(3)
+		
+	
+	def _manageLabel(self):
+		'''
+		deletes a label...
+		
+		'Home' -> 'new-repo' link(click) -> 'issues' icon(click) -> 
+		'Manage Labels' button(click) -> 'Delete' icon(click)
+		'''
+		logger.debug("GitHub: _manageLabel")	
+		logger.debug("GitHub: Click on manage labels button.")
+		manageButton = wait_for(assert_element , text = 'Manage Labels' , tag = 'a')
+		click_element(manageButton)
+		sleep(3)
+		logger.debug("GitHub: Click on delete icon.")
+		deleteIcon = wait_for(get_element_by_xpath , "//div[@id='issues_list']/div[1]/div[4]/div[1]/ul/li[5]/div[1]/span[2]/a/span")
+		click_element(deleteIcon)
+		sleep(3)
+		
+		
+	def _isMilestonePresent(self):
+		'''
+		checks if a milestone is present or not...
+		
+		'Home' -> 'new-repo' link(click) -> 'issues' icon(click) -> 'Milestones' tab(click)
+		-> 'Without issue' tab(click) -> search for the element
+		'''
+		logger.debug("GitHub: _isMilestonePresent")
+		logger.debug("GitHub: Click on the repository link in the repository tab.")
+		repoLink = wait_for(get_element_by_xpath , "//ul[@id='repo_listing']/li/a/span[2]/span")
+		click_element(repoLink)
+		logger.debug("GitHub: Click on the issues icon in the right menu list.")
+		issueIcon = wait_for(get_elements , css_class = 'octicon octicon-issue-opened' , tag = 'span')
+		click_element(issueIcon[1])
+		sleep(3)
+		logger.debug("GitHub: Click on the milestone menu tab.")
+		milestoneTab = wait_for(assert_element , text = 'Milestones' , tag = 'a')
+		click_element(milestoneTab)
+		sleep(3)
+		logger.debug("GitHub: Click on the without issue tab.")
+		withoutIssueTab = wait_for(get_element_by_xpath , "//div[@id='milestone_list']/div[2]/div/div[1]/ul[1]/li[2]/a")
+		click_element(withoutIssueTab)
+		logger.debug("GitHub: Waiting for the milestone text.")
+		milestoneText = wait_for(get_element_by_xpath , "//div[@class='list-browser-item milestone notdue']/h3")
+		if milestoneText:
+			logger.debug("GitHub: _isMilestonePresent: milestone Found.")	
+			return True
+		else:
+			logger.debug("GitHub: _isMilestonePresent: milestone not Found.")	
+			return False
+		
+		
+	def _createMilestone(self):
+		'''
+		creates a milestone...
+		
+		'Home' -> 'new-repo' link(click) -> 'issues' icon(click) -> 'Milestones' tab(click)
+		'Create new milestone' button(click) -> write title -> write milestone description
+		-> 'Create milestone' button(click)
+		'''
+		logger.debug("GitHub: _createMilestone")	
+		logger.debug("GitHub: Click on create a new milestone button.")
+		createButton = wait_for(assert_element , text = 'Create a new milestone' , tag = 'a')
+		click_element(createButton)
+		logger.debug("GitHub: Write the title of the milestone into textbox.")
+		titleTextbox = wait_for(assert_element , id = 'milestone_title' , tag = 'input')
+		write_textfield(titleTextbox , self.milestoneTitle)
+		logger.debug("GitHub: Write the milestone description into textbox.")
+		descriptionTextbox = wait_for(assert_element , id = 'milestone_description' , tag = 'textarea')
+		write_textfield(descriptionTextbox , self.milestoneDesc)
+		logger.debug("GitHub: Click button create milestone.")
+		createMileButton = wait_for(assert_element , text = 'Create milestone' , tag = 'button')
+		click_element(createMileButton)
+		sleep(3)
+		
+		
+	def _deleteMilestone(self):
+		'''
+		deletes a milestone...
+		
+		'Home' -> 'new-repo' link(click) -> 'issues' icon(click) -> 'Milestones' tab(click)
+		-> 'Delete' link(click) -> 'Delete this milestone' button(click)
+		'''
+		logger.debug("GitHub: _deleteMilestone")
+		logger.debug("GitHub: Click on delete link.")
+		deleteLink = wait_for(assert_element , text = 'Delete' , tag = 'a')
+		click_element(deleteLink)
+		sleep(3)
+		logger.debug("GitHub: Click on delete this milestone button.")
+		deleteButton = wait_for(get_element_by_xpath , "//div[@class='facebox-content']/form/div[2]/button")
+		click_element(deleteButton)
+		sleep(3)
+		
+		
+	def _editMilestone(self):
+		'''
+		edits a milestone...
+		
+		'Home' -> 'new-repo' link(click) -> 'issues' icon(click) -> 'Milestones' tab(click)
+		-> 'Edit' link(click) -> write new milestone name -> 'Update milestone' button(click)
+		'''
+		logger.debug("GitHub: _editMilestone")
+		logger.debug("GitHub: Click on edit link.")
+		editLink = wait_for(assert_element , text = 'Edit' , tag = 'a')
+		click_element(editLink)
+		sleep(3)
+		logger.debug("GitHub: write new milestone name into textbox.")
+		editTextbox = wait_for(assert_element , id = 'milestone_title' , tag = 'input')
+		write_textfield(editTextbox , self.newMilestoneTitle)
+		sleep(3)
+		logger.debug("GitHub: Click on update milestone button.")
+		updateButton = wait_for(assert_element , text = 'Update milestone' , tag = 'button')
+		click_element(updateButton)
+		logger.debug("GitHub: Click on the without issue tab.")
+		withoutIssueTab = wait_for(get_element_by_xpath , "//div[@id='milestone_list']/div[2]/div/div[1]/ul[1]/li[2]/a")
+		click_element(withoutIssueTab)
+		sleep(3)
+		
+		
+	def _closeMilestone(self):
+		'''
+		closes a milestone...
+		
+		'Home' -> 'new-repo' link(click) -> 'issues' icon(click) -> 'Milestones' tab(click)
+		-> 'Close' link(click)
+		'''
+		logger.debug("GitHub: _closeMilestone")
+		logger.debug("GitHub: Click on close link.")
+		closeLink = wait_for(assert_element , text = 'Close' , tag = 'a')
+		click_element(closeLink)
+		sleep(3)
+		logger.debug("GitHub: go to user home page.")
+		homeIcon = wait_for(get_element_by_xpath , "html/body/div[1]/div[1]/div/a[1]/span")
+		click_element(homeIcon)
+		logger.debug("GitHub: delete the repo.")
+		self._deleteRepo(self.repoName)
+		
+		
+	def _isPagePresent(self):
+		'''
+		checks if a page is present or not...
+		
+		'Home' -> 'new-repo' link(click) -> 'wiki' icon(click) ->
+		'Page' tab(click) -> search for the element
+		'''
+		logger.debug("GitHub: _isPagePresent")	
+		logger.debug("GitHub: Click on the repository link in the repository tab.")
+		repoLink = wait_for(get_element_by_xpath , "//ul[@id='repo_listing']/li/a/span[2]/span")
+		click_element(repoLink)
+		logger.debug("GitHub: Click on the wiki icon in the right menu list.")
+		wikiIcon = wait_for(assert_element , css_class = 'octicon octicon-book' , tag = 'span')
+		click_element(wikiIcon)
+		sleep(3)
+		logger.debug("GitHub: Click on the page menu tab.")
+		pageTab = wait_for(assert_element , text = 'Pages' , tag = 'a')
+		click_element(pageTab)
+		logger.debug("GitHub: Wait for page name.")
+		newPageName = wait_for(get_element_by_xpath , "//div[@id='wiki-content']/div/ul/li[2]/strong/a")
+		if newPageName:
+			logger.debug("GitHub: _isPagePresent: page Found.")	
+			return True
+		else:
+			logger.debug("GitHub: _isPagePresent: page not Found.")	
+			return False
+		
+		
+	def _addPage(self):
+		'''
+		adds a page...
+		
+		'Home' -> 'new-repo' link(click) -> 'wiki' icon(click) ->
+		'Page' tab(click) -> 'New page' button(click) -> write page name
+		-> 'OK' button(click) -> write details -> 'Save' button(click)
+		'''
+		logger.debug("GitHub: _createPage")	
+		logger.debug("GitHub: Click on the new page button.")
+		newPageButton = wait_for(assert_element , text = 'New Page' , tag = 'a')
+		click_element(newPageButton)
+		logger.debug("GitHub: Write page name into textbox.")
+		pageTextbox = wait_for(assert_element , id = 'gollum-dialog-dialog-generated-field-name' , tag = 'input')
+		write_textfield(pageTextbox , self.pageName)
+		sleep(3)
+		logger.debug("GitHub: Click on ok button.")
+		okButton = wait_for(assert_element , id = 'gollum-dialog-action-ok' , text = 'OK' , tag = 'a')
+		click_element(okButton)
+		logger.debug("GitHub: Write details in the textbox.")
+		detailsTextbox = wait_for(assert_element , id = 'gollum-editor-body' , tag = 'textarea')
+		write_textfield(detailsTextbox , self.pageDetails)
+		sleep(3)
+		logger.debug("GitHub: click on save button.")
+		saveButton = wait_for(assert_element , id = 'gollum-editor-submit' , text = 'Save' , tag = 'button')
+		click_element(saveButton)
+		sleep(3)
+		logger.debug("GitHub: Click on the page menu tab.")
+		pageTab = wait_for(assert_element , text = 'Pages' , tag = 'a')
+		click_element(pageTab)
+		
+		
+	def _deletePage(self):
+		'''
+		deletes a page...
+		
+		'Home' -> 'new-repo' link(click) -> 'wiki' icon(click) ->
+		'Page' tab(click) -> 'new-page' link(click) -> 'Edit page' button(click)
+		-> 'Delete page' button(click) -> accept the alert
+		'''
+		logger.debug("GitHub: _deletePage")
+		logger.debug("GitHub: Click on the page name.")
+		pageName = wait_for(get_element_by_xpath , "//div[@id='wiki-content']/div/ul/li[2]/strong/a") 
+		click_element(pageName)
+		logger.debug("GitHub: Click on the edit page button.")
+		editPageButton = wait_for(get_element_by_xpath , "//div[@id='head']/ul/li[1]/a")
+		click_element(editPageButton)
+		logger.debug("GitHub: Click on the delete page button.")
+		deletePageButton = wait_for(assert_element , text = 'Delete Page' , tag = 'a')
+		click_element(deletePageButton , wait = False)
+		sleep(3)
+		logger.debug("GitHub: accepting the alert.")
+		accept_alert()
+		sleep(3)
+		logger.debug("GitHub: Click on the page menu tab.")
+		pageTab = wait_for(assert_element , text = 'Pages' , tag = 'a')
+		click_element(pageTab)
+		
+		
+####### Actions Start From Here On ########
+
+
+	@TrackIt		
+	def login(self , invalid = False):
+		'''
+		Logs in to GitHub using the provided username & password
+		'''
+		try:
+			logger.debug('ACTION: login : Logging in to GitHub...')
+			logger.debug("GitHub: Go to Login Page")
+			self.browser.maximize_window()
+			go_to(url=self.loginURL)
+			logger.debug("GitHub: Enter login name")
+			usernameTextfield = wait_for(assert_element , id = 'login_field' , tag = 'input')
+			write_textfield(usernameTextfield , self.email)
+			logger.debug("GitHub: Enter password")
+			passwordTextfield = wait_for(assert_element , id = 'password' , tag = 'input')
+			if not invalid :
+				write_textfield(passwordTextfield , self.password)
+			else:
+				write_textfield(passwordTextfield , self.password + 'invalid')
+			logger.debug("GitHub: Click log in button")
+			loginButton = wait_for(get_element_by_xpath , "//div[@id='login']/form/div[3]/input[3]")
+			click_button(loginButton)
+			sleep(5)
+			if not invalid :
+				logger.debug("GitHub: Check if successfully logged in")
+				logger.debug('GitHub : Login Successful...')
+				loginMsg = wait_for(assert_element_by_xpath , "//ul[@id='user-links']/li[1]/a")
+			else:
+				logger.debug('GitHub : Invalid Credentials Provided...')
+				logger.debug('GitHub : Asserting LogIn Failure Message')
+				wait_for(assert_element_by_xpath , "//div[@id='site-container']/div[1]/div")
+				logger.debug('GitHub : Invalid Credentials. Login Failed.')
+				sleep(2)
+				
+		except Exception, e:
+			investigate()
+			raise	
+			
+			
+	@TrackIt			
+	def logout(self):
+		'''
+		Logs out of GitHub
+		'''
+		try:		
+			logger.debug('ACTION: logout : Logging out of GitHub...')
+			logger.debug("GitHub: Click log out link.")
+			logoutLink = wait_for(assert_element , id = 'logout' , tag = 'a')
+			click_element(logoutLink)
+			sleep(5)
+			logger.debug("GitHub: Check if successfully logged out")
+			logoutCheck = wait_for(get_element , text = 'Sign in' , tag = 'a')
+			if logoutCheck : logger.debug("GitHub : User has successfully logged out")
+			else: logger.debug("Github : Logout not asserted. Closing Browser")
+			
+		except Exception, e:
+			investigate()
+			raise	
+			
+			
+	@TrackIt		
+	def	invalidLogin(self):
+		'''
+		Checks that GitHub.com doesn't allows invalid login
+		'''
+		logger.debug("ACTION : invalidLogin : Checks that GitHub.com doesn't allows invalid login")
+		self.login(invalid = True)	
+
+
+	@TrackIt			
+	def createRepo(self):
+		'''
+		creates a repositoty...
+		After logging into the github.com it checks if a repository is
+		present or not...if present,, it deletes the repository and then creates
+		a new one...
+		'''
+		try:
+			logger.debug('ACTION: createRepo : creating repository...')	
+			logger.debug("GitHub: delete repository ,if repository already exist.")
+			if self._isRepoPresent():
+				self._deleteRepo(self.repoName)
+			logger.debug("GitHub: create repository.")
+			self._createRepo()
+			logger.debug("GitHub: Check if successfully created repository.")
+			successRepo = wait_for(assert_element_by_xpath , "//ul[@id='repo_listing']/li/a/span[2]/span")
+			
+		except Exception, e:
+			investigate()
+			raise	
+		
+		
+	@TrackIt			
+	def deleteRepo(self):
+		'''
+		deletes a repositoty...
+		After logging into the github.com it checks if a repository is
+		present or not...if not,, it creates a repository and then deletes
+		it...
+		'''
+		try:
+			logger.debug('ACTION: deleteRepo : deleting repository...')	
+			logger.debug("GitHub: create repository ,if repository doesn't exist.")
+			if not self._isRepoPresent():
+				self._createRepo()
+			logger.debug("GitHub: delete repository.")
+			self._deleteRepo(self.repoName)
+			logger.debug("GitHub: Check if successfully deleted repository.")
+			successRepo = wait_for(assert_element_by_xpath , "//ul[@id='repo_listing']/li/a/span[2]/span")
+		
+		except Exception, e:
+			investigate()
+			raise	
+		
+		
+	@TrackIt			
+	def renameRepo(self):
+		'''
+		renames a repositoty...
+		After logging into the github.com it checks if a repository is
+		present or not...if not,, it creates a repository and then renames
+		it...
+		'''
+		try:
+			logger.debug('ACTION: renameRepo : renaming repository...')	
+			logger.debug("GitHub: create repository ,if repository doesn't exist.")
+			if not self._isRepoPresent():
+				self._createRepo()
+			logger.debug("GitHub: rename repository.")
+			self._renameRepo()
+			logger.debug("GitHub: delete repository.")
+			self._deleteRepo(self.newRepoName)
+		
+		except Exception, e:
+			investigate()
+			raise	
+
+
+	@TrackIt			
+	def markRepo(self):
+		'''
+		star marks a repositoty...
+		After logging into the github.com it checks if a repository is
+		present or not...if not,, it creates a repository and then star 
+		marks it...
+		
+		'Home' -> 'new-repo' link(click) -> 'Star' button(click) -> 'Home'
+		-> 'Star' main menu item(click) -> 'Unstar' button(click)
+		'''
+		try:
+			logger.debug('ACTION: starRepo : star marking the repository...')	
+			logger.debug("GitHub: create repository ,if repository doesn't exist.")
+			if not self._isRepoPresent():
+				self._createRepo()
+			logger.debug("GitHub: Click on the repository link in the repository tab.")
+			repoLink = wait_for(get_element_by_xpath , "//ul[@id='repo_listing']/li/a/span[2]/span")
+			click_element(repoLink)
+			sleep(3)
+			logger.debug("GitHub: Click on the star button.")
+			starButton = wait_for(get_element_by_xpath , "html/body/div[1]/div[2]/div[1]/div/ul/li[2]/div/a[2]")
+			click_element(starButton)
+			sleep(3)
+			logger.debug("GitHub: go to user home page.")
+			homeIcon = wait_for(get_element_by_xpath , "html/body/div[1]/div[1]/div/a[1]/span")
+			click_element(homeIcon)
+			logger.debug("GitHub: Click on star main menu item.")
+			starMainMenu = wait_for(assert_element , text = 'Stars' , tag = 'a')
+			click_element(starMainMenu)
+			sleep(3)
+			logger.debug("GitHub: Click on unstar button.")
+			unstarButton = wait_for(get_element_by_xpath , "//ul[@id='js-repo-list']/li/span[2]/a[1]")
+			click_element(unstarButton)
+			sleep(3)
+		
+		except Exception, e:
+			investigate()
+			raise	
+		
+		
+	@TrackIt			
+	def changeNotification(self):
+		'''
+		changes how you get notified...
+		
+		'Home' -> 'new-repo' link(click) -> 'Unwatch' drop-down(click) -> 
+		'Not watching' drop-down menu item(click)
+		'''
+		try:
+			logger.debug('ACTION: changeNotification : changing notification settings...')	
+			logger.debug("GitHub: create repository ,if repository doesn't exist.")
+			if not self._isRepoPresent():
+				self._createRepo()
+			logger.debug("GitHub: Click on the repository link in the repository tab.")
+			repoLink = wait_for(get_element_by_xpath , "//ul[@id='repo_listing']/li/a/span[2]/span")
+			click_element(repoLink)
+			sleep(3)
+			logger.debug("GitHub: Click on unwatch dropdown button.")
+			unwatchButton = wait_for(get_element_by_xpath , "html/body/div[1]/div[2]/div[1]/div/ul/li[1]/form/div[2]/span")
+			click_element(unwatchButton)
+			sleep(3)
+			logger.debug("GitHub: Click on not watching dropdown menu item.")
+			notWatching=wait_for(get_element_by_xpath,"html/body/div[1]/div[2]/div[1]/div/ul/li[1]/form/div[2]/div/div/div[2]/div[1]/div")
+			click_element(notWatching)
+			sleep(3)
+			
+		except Exception, e:
+			investigate()
+			raise		
+		
+		
+	@TrackIt			
+	def createOrganization(self):
+		'''
+		creates an organization...
+		After logging into the github.com it checks if an organization is
+		present or not...if present,, it deletes the organization and then creates
+		a new one...
+		'''
+		try:
+			logger.debug('ACTION: createOrganization : Creating an organization...')
+			logger.debug("GitHub: delete organization ,if organization already exist.")
+			if self._isOrganizationPresent():
+				self._deleteOrganization(self.orgName)
+			logger.debug("GitHub: create organization.")
+			self._createOrganization()
+			logger.debug("GitHub: Check if successfully created organization.")
+			self._isOrganizationPresent()
+		
+		except Exception, e:
+			investigate()
+			raise	
+		
+		
+	@TrackIt			
+	def deleteOrganization(self):
+		'''
+		deletes an organization...
+		After logging into the github.com it checks if an organization is
+		present or not...if not,, it creates an organization and then deletes
+		it...
+		'''
+		try:
+			logger.debug('ACTION: deleteOrganization : Deleting an organization...')
+			logger.debug("GitHub: create organization ,if organization doesn't exist.")
+			if not self._isOrganizationPresent():
+				self._createOrganization()
+			logger.debug("GitHub: delete organization.")
+			self._deleteOrganization(self.orgName)
+			logger.debug("GitHub: Check if successfully deleted organization.")
+			self._isOrganizationPresent()
+			
+		except Exception, e:
+			investigate()
+			raise	
+	
+		
+	@TrackIt			
+	def manageOrganization(self):
+		'''
+		manages an organization
+		
+		'Home' -> 'jumbo-tester' drop-down(click) -> 'Manage organization' menu-item(click)
+		-> 'Leave' button(click) -> accept the alert
+		'''
+		try:
+			logger.debug('ACTION: manageOrganization : Leaving an organization...')
+			logger.debug("GitHub: create organization ,if organization doesn't exist.")
+			if not self._isOrganizationPresent():
+				self._createOrganization()
+			logger.debug("GitHub: Click on user dropdown button at the top left.")
+			userDropDown = wait_for(get_element_by_xpath , "//div[@id='site-container']/div[1]/div/div/span")
+			click_element(userDropDown)	
+			sleep(3)
+			logger.debug("GitHub: Click on manage organization drop down menu item.")
+			manageMenuItem = wait_for(assert_element , text = 'Manage Organizations' , tag = 'span')
+			click_element(manageMenuItem)
+			sleep(3)
+			logger.debug("GitHub: Click on leave button.")
+			leaveButton = wait_for(assert_element , text = 'Leave' , tag = 'a')
+			click_element(leaveButton , wait = False)
+			sleep(3)
+			logger.debug("GitHub: accepting the alert.")
+			accept_alert()
+			sleep(3)
+			
+		except Exception, e:
+			investigate()
+			raise	
+		
+		
+	@TrackIt			
+	def createIssue(self):
+		'''
+		creates an issue...
+		After logging into the github.com it checks if an issue is
+		present or not...if present,, it deletes the issue and then creates
+		a new one...
+		'''
+		try:
+			logger.debug('ACTION: createIssue : creating issue...')	
+			logger.debug("GitHub: create repository ,if repository doesn't exist.")
+			if not self._isRepoPresent():
+				self._createRepo()
+			logger.debug("GitHub: close issue ,if issue already exist.")
+			if self._isIssuePresent():
+				self._closeIssue()
+			logger.debug("GitHub: create issue.")
+			self._createIssue()
+			logger.debug("GitHub: Check if successfully created issue.")
+			issueNameText = wait_for(assert_element_by_xpath , "//ul[@class='list-group issue-list-group']/li[2]/h4")
+		
+		except Exception, e:
+			investigate()
+			raise	
+			
+			
+	@TrackIt			
+	def closeIssue(self):
+		'''
+		closes an issue...
+		After logging into the github.com it checks if an issue is
+		present or not...if not,, it creates the issue and then closes
+		it...
+		'''
+		try:
+			logger.debug('ACTION: closeIssue : closing issue...')	
+			logger.debug("GitHub: create repository ,if repository doesn't exist.")
+			if not self._isRepoPresent():
+				self._createRepo()
+			logger.debug("GitHub: create issue ,if issue doesn't exist.")
+			if not self._isIssuePresent():
+				self._createIssue()
+			logger.debug("GitHub: close issue.")
+			self._closeIssue()
+			logger.debug("GitHub: Check if successfully closed issue.")
+			issueNameText = wait_for(assert_element_by_xpath , "//ul[@class='list-group issue-list-group']/li[2]/h4")
+		
+		except Exception, e:
+			investigate()
+			raise			
+		
+
+	@TrackIt			
+	def closeAllIssue(self):
+		'''
+		closes all issues...
+		After logging into the github.com it checks if an issue is
+		present or not...if not,, it creates the issue and then closes
+		all the issues...
+		'''
+		try:
+			logger.debug('ACTION: closeAllIssue : closing all issues...')	
+			logger.debug("GitHub: create repository ,if repository doesn't exist.")
+			if not self._isRepoPresent():
+				self._createRepo()
+			logger.debug("GitHub: create issue ,if issue doesn't exist.")
+			if not self._isIssuePresent():
+				self._createIssue()
+			logger.debug("GitHub: Click on select all checkBox.")
+			selectAllCheckBox = wait_for(get_element_by_xpath , "//label[@class='select-all']/input")
+			click_element(selectAllCheckBox)
+			logger.debug("GitHub: Click on the close button.")
+			closeButton = wait_for(assert_element , text = 'Close' , tag = 'a')
+			click_element(closeButton)
+			sleep(3)
+			logger.debug("GitHub: Check if successfully closed issue.")
+			issueNameText = wait_for(assert_element_by_xpath , "//ul[@class='list-group issue-list-group']/li[2]/h4")
+			
+		except Exception, e:
+			investigate()
+			raise
+			
+			
+	@TrackIt			
+	def addLabel(self):
+		'''
+		adds a label to an issue...
+		After logging into the github.com it checks if a label is
+		present or not...if present,, it deletes the label and then creates
+		a new one...
+		'''
+		try:
+			logger.debug('ACTION: addLabel : adding label to the issue...')	
+			logger.debug("GitHub: create repository ,if repository doesn't exist.")
+			if not self._isRepoPresent():
+				self._createRepo()
+			logger.debug("GitHub: create issue ,if issue doesn't exist.")
+			if not self._isIssuePresent():
+				self._createIssue()	
+			logger.debug("GitHub: delete label ,if label already exist.")
+			if self._isLabelPresent():
+				self._removeLabel()
+			logger.debug("GitHub: add label.")
+			self._addLabel()
+			logger.debug("GitHub: Check if successfully added label.")
+			labelNameIcon = wait_for(assert_element_by_xpath , "//div[@id='issues_list']/div[2]/div[2]/div[1]/ul/li[2]/h4/span[2]/span")
+			
+		except Exception, e:
+			investigate()
+			raise	
+			
+			
+	@TrackIt			
+	def removeLabel(self):
+		'''
+		removes a label from an issue...
+		After logging into the github.com it checks if a label is
+		present or not...if not,, it adds a label and then removes
+		a new one...
+		'''
+		try:
+			logger.debug('ACTION: removeLabel : removing label from the issue...')	
+			logger.debug("GitHub: create repository ,if repository doesn't exist.")
+			if not self._isRepoPresent():
+				self._createRepo()
+			logger.debug("GitHub: create issue ,if issue doesn't exist.")
+			if not self._isIssuePresent():
+				self._createIssue()	
+			logger.debug("GitHub: create label ,if label doesn't exist.")
+			if not self._isLabelPresent():
+				self._addLabel()
+			logger.debug("GitHub: remove label.")
+			self._removeLabel()	
+			logger.debug("GitHub: Check if successfully removed label.")
+			labelNameIcon = wait_for(assert_element_by_xpath , "//div[@id='issues_list']/div[2]/div[2]/div[1]/ul/li[2]/h4/span[2]/span")
+			
+		except Exception, e:
+			investigate()
+			raise	
+			
+			
+	@TrackIt			
+	def viewIssue(self):
+		'''
+		views an issue...
+		
+		'Home' -> 'new-repo' link(click) -> 'issues' icon(click) -> 'new-issue' link(click)
+		'''
+		try:
+			logger.debug('ACTION: viewIssue : viewing issue...')	
+			logger.debug("GitHub: create repository ,if repository doesn't exist.")
+			if not self._isRepoPresent():
+				self._createRepo()
+			logger.debug("GitHub: create issue ,if issue doesn't exist.")
+			if not self._isIssuePresent():
+				self._createIssue()	
+			logger.debug("GitHub: click on the issue.")
+			issueText = wait_for(get_element_by_xpath , "//h4[@class='list-group-item-name']/a")
+			click_element(issueText)
+			sleep(3)
+			
+		except Exception, e:
+			investigate()
+			raise	
+			
+			
+	@TrackIt			
+	def renameIssue(self):
+		'''
+		renames an issue...
+		After logging into the github.com it checks if an issue is
+		present or not...if not,, it adds an issue and then renames
+		it...
+		'''
+		try:
+			logger.debug('ACTION: renameIssue : renaming issue...')	
+			logger.debug("GitHub: Call viewIssue action.")
+			self.viewIssue()
+			logger.debug("GitHub: rename issue.")
+			self._renameIssue()
+				
+		except Exception, e:
+			investigate()
+			raise				
+			
+			
+	@TrackIt			
+	def addComment(self):
+		'''
+		adds a comment to an issue...
+		After logging into the github.com it checks if a comment is
+		present or not...if present,, it deletes the comment and then adds
+		a new one...
+		'''
+		try:
+			logger.debug('ACTION: addcomment : adding comment...')	
+			logger.debug("GitHub: Call viewIssue action.")
+			self.viewIssue()
+			logger.debug("GitHub: delete comment ,if comment already exist.")
+			if self._iscommentPresent():
+				self._deleteComment()
+			logger.debug("GitHub: add comment.")
+			self._addComment()
+			logger.debug("GitHub: Check if successfully added comment.")
+			commentBar = wait_for(assert_element_by_xpath , "//div[@id='discussion_bucket']/div[2]/div[1]/div[3]/div[1]/div[1]/div[1]/div[1]")
+				
+		except Exception, e:
+			investigate()
+			raise			
+			
+			
+	@TrackIt			
+	def deleteComment(self):
+		'''
+		removes a comment from an issue...
+		After logging into the github.com it checks if an issue is
+		present or not...if not,, it adds an issue and then deletes
+		it...
+		'''
+		try:
+			logger.debug('ACTION: removecomment : removing comment...')	
+			logger.debug("GitHub: Call viewIssue action.")
+			self.viewIssue()
+			logger.debug("GitHub: add comment ,if comment doesn't exist.")
+			if not self._iscommentPresent():
+				self._addComment()
+			logger.debug("GitHub: remove comment.")
+			self._deleteComment()
+			logger.debug("GitHub: Check if successfully deleted comment.")
+			commentBar = wait_for(assert_element_by_xpath , "//div[@id='discussion_bucket']/div[2]/div[1]/div[3]/div[1]/div[1]/div[1]/div[1]")
+				
+		except Exception, e:
+			investigate()
+			raise					
+			
+			
+	@TrackIt			
+	def editComment(self):
+		'''
+		edits a comment...
+		After logging into the github.com it checks if an issue is
+		present or not...if not,, it adds an issue and then edits
+		it...
+		'''
+		try:
+			logger.debug('ACTION: editComment : editing comment...')	
+			logger.debug("GitHub: Call viewIssue action.")
+			self.viewIssue()
+			logger.debug("GitHub: add comment ,if comment doesn't exist.")
+			if not self._iscommentPresent():
+				self._addComment()
+			logger.debug("GitHub: edit comment.")
+			self._editComment()
+			self._deleteComment()
+				
+		except Exception, e:
+			investigate()
+			raise					
+			
+								
+	@TrackIt			
+	def createLabel(self):
+		'''
+		creates a label..
+		After logging into the github.com it checks if a label is
+		present or not...if present,, it deletes the label and then creates
+		a new one...
+		'''
+		try:
+			logger.debug('ACTION: createLabel : creating a label...')
+			logger.debug("GitHub: create repository ,if repository doesn't exist.")
+			if not self._isRepoPresent():
+				self._createRepo()
+			logger.debug("GitHub: delete label ,if label already exist.")
+			if self._isLabelCreated():
+				self._manageLabel()
+			logger.debug("GitHub: create label.")
+			self._createLabel()
+			logger.debug("GitHub: Check if successfully created label.")
+			labelText = wait_for(assert_element , text = 'new-label' , tag = 'span')
+			
+		except Exception, e:
+			investigate()
+			raise			
+					
+					
+	@TrackIt			
+	def manageLabel(self):
+		'''
+		deletes a label from the label list...
+		After logging into the github.com it checks if a label is
+		present or not...if not,, it adds a label and then deletes
+		it...
+		'''
+		try:
+			logger.debug('ACTION: manageLabel : deleting the label from the list...')
+			logger.debug("GitHub: create repository ,if repository doesn't exist.")
+			if not self._isRepoPresent():
+				self._createRepo()
+			logger.debug("GitHub: create label ,if label doesn't exist.")
+			if not self._isLabelCreated():
+				self._createLabel()
+			logger.debug("GitHub: delete label.")
+			self._manageLabel()
+			logger.debug("GitHub: Check if successfully deleted label.")
+			labelText = wait_for(assert_element , text = 'new-label' , tag = 'span')
+			
+		except Exception, e:
+			investigate()
+			raise			
+			
+					
+	@TrackIt			
+	def createMilestone(self):
+		'''
+		creates a milestone...
+		After logging into the github.com it checks if a milestone is
+		present or not...if present,, it deletes the milestone and then creates
+		a new one...
+		'''
+		try:
+			logger.debug('ACTION: createMilestone : creating a milestone...')
+			logger.debug("GitHub: create repository ,if repository doesn't exist.")
+			if not self._isRepoPresent():
+				self._createRepo()
+			logger.debug("GitHub: delete milestone ,if milestone already exist.")
+			if self._isMilestonePresent():
+				self._deleteMilestone()
+			logger.debug("GitHub: create milestone.")
+			self._createMilestone()
+			logger.debug("GitHub: Check if successfully created milestone.")
+			milestoneText = wait_for(get_element_by_xpath , "//div[@class='list-browser-item milestone notdue']/h3")
+			
+		except Exception, e:
+			investigate()
+			raise							
+					
+					
+	@TrackIt			
+	def deleteMilestone(self):
+		'''
+		deletes a milestone...
+		After logging into the github.com it checks if a milestone is
+		present or not...if not,, it adds a milestone and then deletes
+		it...
+		'''
+		try:
+			logger.debug('ACTION: deleteMilestone : deleting a milestone...')
+			logger.debug("GitHub: create repository ,if repository doesn't exist.")
+			if not self._isRepoPresent():
+				self._createRepo()
+			logger.debug("GitHub: create milestone ,if milestone doesn't exist.")
+			if not self._isMilestonePresent():
+				self._createMilestone()
+			logger.debug("GitHub: delete milestone.")
+			self._deleteMilestone()
+			logger.debug("GitHub: Check if successfully deleted milestone.")
+			milestoneText = wait_for(get_element_by_xpath , "//div[@class='list-browser-item milestone notdue']/h3")
+			
+		except Exception, e:
+			investigate()
+			raise					
+					
+			
+	@TrackIt			
+	def editMilestone(self):
+		'''
+		edits a milestone..
+		After logging into the github.com it checks if a milestone is
+		present or not...if not,, it adds a milestone and then edits
+		it...
+		'''
+		try:
+			logger.debug('ACTION: editMilestone : renaming a milestone...')
+			logger.debug("GitHub: create repository ,if repository doesn't exist.")
+			if not self._isRepoPresent():
+				self._createRepo()
+			logger.debug("GitHub: create milestone ,if milestone doesn't exist.")
+			if not self._isMilestonePresent():
+				self._createMilestone()
+			logger.debug("GitHub: rename milestone.")
+			self._editMilestone()
+			
+		except Exception, e:
+			investigate()
+			raise							
+			
+			
+	@TrackIt			
+	def closeMilestone(self):
+		'''
+		closes a milestone..
+		After logging into the github.com it checks if a milestone is
+		present or not...if not,, it adds a milestone and then closes
+		it...
+		'''
+		try:
+			logger.debug('ACTION: closeMilestone : closing a milestone...')
+			logger.debug("GitHub: create repository ,if repository doesn't exist.")
+			if not self._isRepoPresent():
+				self._createRepo()
+			logger.debug("GitHub: create milestone ,if milestone doesn't exist.")
+			if not self._isMilestonePresent():
+				self._createMilestone()
+			logger.debug("GitHub: closing milestone.")
+			self._closeMilestone()
+			
+		except Exception, e:
+			investigate()
+			raise							
+			
+			
+	@TrackIt			
+	def viewMilestone(self):
+		'''
+		views a milestone..
+		After logging into the github.com it checks if a milestone is
+		present or not...if not,, it adds a milestone and then views
+		it...
+		'''
+		try:
+			logger.debug('ACTION: viewMilestone : viewing a milestone...')
+			logger.debug("GitHub: create repository ,if repository doesn't exist.")
+			if not self._isRepoPresent():
+				self._createRepo()
+			logger.debug("GitHub: create milestone ,if milestone doesn't exist.")
+			if not self._isMilestonePresent():
+				self._createMilestone()
+			logger.debug("GitHub: click on milestone name.")
+			milestoneName = wait_for(get_element_by_xpath , "//div[@class='list-browser-item milestone notdue']/h3/a")
+			click_element(milestoneName)
+			sleep(3)
+			
+		except Exception, e:
+			investigate()
+			raise					
+			
+			
+	@TrackIt			
+	def viewReport(self):
+		'''
+		views the report of activities..
+		
+		'Home' -> 'new-repo' link(click) -> 'pulse' icon(click)
+		'''
+		try:
+			logger.debug('ACTION: viewReport : viewing the report...')
+			logger.debug("GitHub: create repository ,if repository doesn't exist.")
+			if not self._isRepoPresent():
+				self._createRepo()	
+			logger.debug("GitHub: Click on the repository link in the repository tab.")
+			repoLink = wait_for(get_element_by_xpath , "//ul[@id='repo_listing']/li/a/span[2]/span")
+			click_element(repoLink)
+			logger.debug("GitHub: Click on the pulse icon in the right menu list.")
+			issueIcon = wait_for(assert_element , css_class = 'octicon octicon-pulse' , tag = 'span')
+			click_element(issueIcon)
+			sleep(5)
+			
+		except Exception, e:
+			investigate()
+			raise	
+			
+			
+	@TrackIt			
+	def addPage(self):
+		'''
+		adds a new page in the wiki...
+		After logging into the github.com it checks if a page is
+		present or not...if present,, it deletes the page and then adds
+		a new one...
+		'''
+		try:
+			logger.debug('ACTION: addPage : adding a page...')
+			logger.debug("GitHub: create repository ,if repository doesn't exist.")
+			if not self._isRepoPresent():
+				self._createRepo()	
+			logger.debug("GitHub: delete page ,if page already exist.")
+			if self._isPagePresent():
+				self._deletePage()
+			logger.debug("GitHub: add page.")
+			self._addPage()
+			logger.debug("GitHub: Check if successfully added page.")
+			newPageName = wait_for(get_element_by_xpath , "//div[@id='wiki-content']/div/ul/li[2]/strong/a")
+			
+		except Exception, e:
+			investigate()
+			raise			
+			
+			
+	@TrackIt			
+	def deletePage(self):
+		'''
+		deletes a page in the wiki...
+		After logging into the github.com it checks if a page is
+		present or not...if not,, it adds a page and then deletes
+		it...
+		'''
+		try:
+			logger.debug('ACTION: deletePage : adding a page...')
+			logger.debug("GitHub: create repository ,if repository doesn't exist.")
+			if not self._isRepoPresent():
+				self._createRepo()	
+			logger.debug("GitHub: add page ,if page doesn't exist.")
+			if not self._isPagePresent():
+				self._addPage()
+			logger.debug("GitHub: delete page.")
+			self._deletePage()
+			logger.debug("GitHub: Check if successfully deleted page.")
+			newPageName = wait_for(get_element_by_xpath , "//div[@id='wiki-content']/div/ul/li[2]/strong/a")
+			
+		except Exception, e:
+			investigate()
+			raise					
+			
+			
+	@TrackIt			
+	def viewPage(self):
+		'''
+		views a page in the wiki...
+		After logging into the github.com it checks if a page is
+		present or not...if not,, it adds a page and then views
+		it...
+		'''
+		try:
+			logger.debug('ACTION: viewPage : views a page...')
+			logger.debug("GitHub: create repository ,if repository doesn't exist.")
+			if not self._isRepoPresent():
+				self._createRepo()	
+			logger.debug("GitHub: add page ,if page doesn't exist.")
+			if not self._isPagePresent():
+				self._addPage()
+			logger.debug("GitHub: click on page name.")
+			pageName = wait_for(get_element_by_xpath , "//div[@id='wiki-content']/div/ul/li[2]/strong/a") 
+			click_element(pageName)
+			sleep(3)
+			
+		except Exception, e:
+			investigate()
+			raise						
+			
+			
+	@TrackIt			
+	def renamePage(self):
+		'''
+		renames a page in the wiki...
+		After logging into the github.com it checks if a page is
+		present or not...if not,, it adds a page and then deletes
+		it...
+		
+		'Home' -> 'new-repo' link(click) -> 'wiki' icon(click) ->
+		'Page' tab(click) -> 'new-page' link(click) -> 'Edit page' button(click)
+		-> write new name -> write details -> 'Save' button(click)
+		'''
+		try:
+			logger.debug('ACTION: renamePage : renames a page...')
+			logger.debug("GitHub: create repository ,if repository doesn't exist.")
+			if not self._isRepoPresent():
+				self._createRepo()	
+			logger.debug("GitHub: add page ,if page doesn't exist.")
+			if not self._isPagePresent():
+				self._addPage()	
+			logger.debug("GitHub: Click on the page name.")
+			pageName = wait_for(get_element_by_xpath , "//div[@id='wiki-content']/div/ul/li[2]/strong/a") 
+			click_element(pageName)
+			logger.debug("GitHub: Click on the edit page button.")
+			editPageButton = wait_for(get_element_by_xpath , "//div[@id='head']/ul/li[1]/a")
+			click_element(editPageButton)
+			logger.debug("GitHub: Write edited page name into textbox.")
+			pageNameTextbox = wait_for(get_element_by_xpath , "//input[@id='gollum-editor-page-title' and @type='text']")
+			write_textfield(pageNameTextbox , self.newPageName)
+			logger.debug("GitHub: Write details in the textbox.")
+			detailsTextbox = wait_for(assert_element , id = 'gollum-editor-body' , tag = 'textarea')
+			write_textfield(detailsTextbox , self.newPageDetails)
+			logger.debug("GitHub: click on save button.")
+			saveButton = wait_for(assert_element , id = 'gollum-editor-submit' , text = 'Save' , tag = 'button')
+			click_element(saveButton)
+			sleep(3)
+				
+		except Exception, e:
+			investigate()
+			raise			
+				
+				
+			
